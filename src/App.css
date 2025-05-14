@@ -853,3 +853,43 @@ input:focus {
   margin-top: auto;
   color: var(--text-color-secondary);
 }
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  position: relative;
+  transition: color 0.2s ease;
+  font-weight: 500;
+}
+
+a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background-color: var(--primary-color);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+a:hover::after {
+  transform: scaleX(1);
+}
+
+body.dark-mode a {
+  color: #a5b4fc; /* lighter shade for dark backgrounds */
+}
+
+body.dark-mode a::after {
+  background-color: #a5b4fc;
+}
+
+body.dark-mode a:hover {
+  color: #c7d2fe;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, PlusCircle, Menu, Moon, Sun, MessageSquare, Settings, LogOut, LogIn, Loader } from 'lucide-react';
+import { Send, PlusCircle, Menu, Moon, Sun, MessageSquare, Settings, LogOut, LogIn, Loader, X } from 'lucide-react';
 import './App.css';
 import logo from './assets/logo.svg';
 import aiAvatar from './assets/aiavatar.png';
@@ -36,7 +36,7 @@ function App() {
     const savedMode = localStorage.getItem('darkMode');
     return savedMode ? JSON.parse(savedMode) : window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [currentConversation, setCurrentConversation] = useState('');
   const [input, setInput] = useState('');
@@ -47,6 +47,7 @@ function App() {
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const sidebarRef = useRef(null);
   
   // Helper function to create personalized welcome message
   const getWelcomeMessage = () => {
@@ -60,11 +61,11 @@ function App() {
     const handleResize = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
-      if (!mobile && !sidebarOpen) setSidebarOpen(true);
+      if (!mobile) setSidebarOpen(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [sidebarOpen]);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
@@ -105,7 +106,7 @@ function App() {
     const adjustHeight = () => {
       if (inputRef.current) {
         inputRef.current.style.height = 'auto';
-        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+        inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 150)}px`;
       }
     };
     adjustHeight();
@@ -115,6 +116,19 @@ function App() {
       return () => textArea.removeEventListener('input', adjustHeight);
     }
   }, [input]);
+
+  // Handle clicks outside of sidebar to close it on mobile
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target) && 
+          isMobile && sidebarOpen && !event.target.closest('.sidebar-toggle')) {
+        setSidebarOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobile, sidebarOpen]);
 
   const getCurrentMessages = () => {
     const conversation = conversations.find(c => c.id === currentConversation);
@@ -256,13 +270,34 @@ function App() {
 
   return (
     <div className={`app-container ${darkMode ? 'dark' : 'light'}`}>
-      <button className="sidebar-toggle" onClick={toggleSidebar}>
-        <Menu size={20} />
+      <button 
+        className={`sidebar-toggle ${sidebarOpen ? 'active' : ''}`} 
+        onClick={toggleSidebar}
+        aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+      >
+        {sidebarOpen && isMobile ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      <div className={`sidebar ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      {/* Overlay for mobile when sidebar is open */}
+      {isMobile && sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
+      )}
+      
+      <div 
+        ref={sidebarRef}
+        className={`sidebar ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}
+      >
         <div className="sidebar-header">
           <img src={logo} alt="Andromeda Logo" className="sidebar-logo" />
+          {isMobile && (
+            <button 
+              className="close-sidebar-btn" 
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         <button className="new-chat-btn" onClick={createNewConversation}>
@@ -330,13 +365,15 @@ function App() {
               className="profile-pic"
             />
             {userMenuOpen && (
-              <ul className="dropdown-menu">
-                {isAuthenticated ? (
-                  <li><LogoutButton /></li>
-                ) : (
-                  <li><LoginButton /></li>
-                )}
-              </ul>
+              <div className="dropdown-overlay" onClick={() => setUserMenuOpen(false)}>
+                <ul className="dropdown-menu">
+                  {isAuthenticated ? (
+                    <li><LogoutButton /></li>
+                  ) : (
+                    <li><LoginButton /></li>
+                  )}
+                </ul>
+              </div>
             )}
           </div>
         </div>
@@ -395,16 +432,28 @@ function App() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Type your message here..."
+              rows={1}
             />
-            <button className="send-btn" onClick={handleSend} disabled={loading}>
+            <button 
+              className="send-btn" 
+              onClick={handleSend} 
+              disabled={loading}
+              aria-label="Send message"
+            >
               {loading ? <Loader size={16} className="spinner" /> : <Send size={16} />}
             </button>
           </div>
         </div>
         
-        <footer className="app-footer">
-          <p>&copy; {currentYear} Andromeda by Aashutosh. All rights reserved.</p>
+        <footer className="app-footer"> 
+          <p>
+            &copy; {currentYear} Andromeda by{" "}
+            <a href="https://aashutoshkhatiwada.com.np" target="_blank" rel="noopener noreferrer">
+              Aashutosh
+            </a>. All rights reserved.
+          </p>
         </footer>
+
       </div>
     </div>
   );
