@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, PlusCircle, Menu, Moon, Sun, MessageSquare, Settings, LogOut, LogIn, Loader, X} from 'lucide-react';
+import { Send, PlusCircle, Menu, Moon, Sun, MessageSquare, Settings, LogOut, LogIn, Loader, X, Facebook, Twitter, Linkedin } from 'lucide-react';
 import './App.css';
 import logo from './assets/logo.svg'; // Assuming you have this logo
 import aiAvatar from './assets/aiavatar.png'; // Assuming you have this avatar
 import { useAuth0 } from "@auth0/auth0-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Helmet } from 'react-helmet'; // Import React Helmet for OG meta tags
 
 // Login button component
 const LoginButton = () => {
@@ -48,6 +49,9 @@ function App() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const sidebarRef = useRef(null);
+  
+  // Social sharing URL
+  const socialShareUrl = "https://example.com";
   
   const getWelcomeMessage = () => {
     if (isAuthenticated && user?.name) {
@@ -265,10 +269,40 @@ function App() {
     return isAuthenticated && user?.picture ? user.picture : defaultUserAvatar;
   };
 
+  const handleSocialShare = (platform) => {
+    let shareUrl = '';
+    
+    switch(platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(socialShareUrl)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(socialShareUrl)}&text=${encodeURIComponent('Check out Andromeda AI!')}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(socialShareUrl)}`;
+        break;
+      default:
+        return;
+    }
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  };
+
   const currentYear = new Date().getFullYear();
 
   return (
     <div className={`app-container ${darkMode ? 'dark' : 'light'}`}>
+      {/* Add Open Graph meta tags for social sharing */}
+      <Helmet>
+        <meta property="og:title" content="Andromeda AI - Advanced Conversational Assistant" />
+        <meta property="og:description" content="An advanced AI assistant designed to help with information, tasks, and conversations developed by Aashutosh." />
+        <meta property="og:image" content="https://pbs.twimg.com/media/Gq6gsVPW0AAMqaL?format=png&name=large" />
+        <meta property="og:url" content={socialShareUrl} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
+      
       <button 
         className={`sidebar-toggle ${sidebarOpen ? 'active' : ''}`} 
         onClick={toggleSidebar}
@@ -347,10 +381,36 @@ function App() {
       <div className="main-content">
         <div className="chat-header">
           <div className="chat-title-main"> {/* Renamed for clarity from chat-title */}
-            <MessageSquare size={18} />
             <span>{conversations.find(c => c.id === currentConversation)?.title || 'Andromeda AI'}</span>
           </div>
+
           <div className="user-menu">
+            {/* Social media sharing icons */}
+           <h3 style={{ color: 'var(--primary-color)' }}>Share us</h3>    
+            <div className="social-icons">
+              <button 
+                className="social-icon" 
+                onClick={() => handleSocialShare('facebook')}
+                aria-label="Share on Facebook"
+              >
+                <Facebook size={18} />
+              </button>
+              <button 
+                className="social-icon" 
+                onClick={() => handleSocialShare('twitter')}
+                aria-label="Share on Twitter/X"
+              >
+                <Twitter size={18} />
+              </button>
+              <button 
+                className="social-icon" 
+                onClick={() => handleSocialShare('linkedin')}
+                aria-label="Share on LinkedIn"
+              >
+                <Linkedin size={18} />
+              </button>
+            </div>
+            
             <img
               src={getUserAvatar()}
               alt="Profile"
@@ -363,7 +423,7 @@ function App() {
                   {isAuthenticated ? (
                     <li>{user.name}</li>
                   ) : (
-                    <li>Not Logged In</li>
+                    <li>Not logged in, Go to settings.</li>
                   )}
                 </ul>
               </div>

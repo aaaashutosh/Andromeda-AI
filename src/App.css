@@ -854,6 +854,57 @@ input:focus {
   background-color: #333;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
+/* Add these styles to your existing CSS file */
+
+/* Social Icons */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.social-icons {
+  display: flex;
+  gap: 8px;
+}
+
+.social-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  padding: 5px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.social-icon:hover {
+  background-color: var(--hover-color);
+  transform: scale(1.1);
+}
+
+/* Dark mode overrides */
+.dark .social-icon {
+  color: var(--dark-text-color);
+}
+
+.dark .social-icon:hover {
+  background-color: var(--dark-hover-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .social-icons {
+    gap: 4px;
+  }
+  
+  .social-icon {
+    padding: 3px;
+  }
+}
 
 @keyframes rotate {
   from {
