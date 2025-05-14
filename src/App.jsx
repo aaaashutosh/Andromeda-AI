@@ -52,9 +52,9 @@ function App() {
   // Helper function to create personalized welcome message
   const getWelcomeMessage = () => {
     if (isAuthenticated && user?.name) {
-      return `Hi ${user.name}! How can I help you today?`;
+      return `Welcome to Andromeda AI, ${user.name}. This is an advanced AI assistant designed to help with information, tasks, and conversations. Start by asking any question or requesting assistance.`;
     }
-    return 'Hi! How can I help you today?';
+    return 'Welcome to Andromeda AI. This is an advanced AI assistant designed to help with information, tasks, and conversations. Start by asking any question or requesting assistance.';
   };
 
   useEffect(() => {
@@ -88,14 +88,13 @@ function App() {
   
   // Create initial conversation when the component mounts or when user authentication changes
   useEffect(() => {
-    // Create a new conversation with personalized welcome message
+    // Create a new conversation but without any welcome message
     const newId = `chat-${Date.now()}`;
-    const welcomeMessage = getWelcomeMessage();
     
     const newConv = {
       id: newId,
       title: 'New Chat',
-      messages: [{ type: 'bot', text: welcomeMessage }]
+      messages: [] // Empty messages array - no chat message to start
     };
     
     setConversations([newConv]);
@@ -380,16 +379,20 @@ function App() {
 
         <div className="chat-window">
           <div className="chat-box">
-            {getCurrentMessages().length < 1 ? (
-              <div className="welcome-screen">
-                <h2>{isAuthenticated && user?.name ? `Welcome, ${user.name}!` : 'Welcome to Andromeda AI'}</h2>
-                <p>Your intelligent assistant ready to help with information, tasks, and conversations.</p>
-                <button
-                  onClick={() => inputRef.current?.focus()}
-                  className="start-chat-btn"
-                >
-                  Start Chatting
-                </button>
+            {getCurrentMessages().length === 0 ? (
+              <div className="welcome-panel">
+                <div className="welcome-content">
+                  <h2>{isAuthenticated && user?.name ? `Welcome, ${user.name}!` : 'Welcome to Andromeda AI'}</h2>
+                  <div className="info-section">
+                    <p>Andromeda AI is an advanced artificial intelligence assistant designed to help with information, tasks, and conversations developed by <a href="https://aashutoshkhatiwada.com.np">Aashutosh Khatiwada</a>.</p>
+                  </div>
+                  <button
+                    onClick={() => inputRef.current?.focus()}
+                    className="start-chat-btn"
+                  >
+                    Start
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -445,15 +448,9 @@ function App() {
           </div>
         </div>
         
-        <footer className="app-footer"> 
-          <p>
-            &copy; {currentYear} Andromeda by{" "}
-            <a href="https://aashutoshkhatiwada.com.np" target="_blank" rel="noopener noreferrer">
-              Aashutosh
-            </a>. All rights reserved.
-          </p>
+        <footer className="app-footer">
+          <p>&copy; {currentYear} Andromeda by Aashutosh. All rights reserved.</p>
         </footer>
-
       </div>
     </div>
   );
