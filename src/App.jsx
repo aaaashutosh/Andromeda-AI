@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, PlusCircle, Menu, Moon, Sun, MessageSquare, Settings, LogOut, LogIn, Loader, X } from 'lucide-react';
+import { Send, PlusCircle, Menu, Moon, Sun, MessageSquare, Settings, LogOut, LogIn, Loader, X} from 'lucide-react';
 import './App.css';
 import logo from './assets/logo.svg'; // Assuming you have this logo
 import aiAvatar from './assets/aiavatar.png'; // Assuming you have this avatar
@@ -287,15 +287,6 @@ function App() {
       >
         <div className="sidebar-header">
           <img src={logo} alt="Andromeda Logo" className="sidebar-logo" />
-          {isMobile && (
-            <button 
-              className="close-sidebar-btn" 
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Close sidebar"
-            >
-              <X size={20} />
-            </button>
-          )}
         </div>
 
         <button className="new-chat-btn" onClick={createNewConversation}>
