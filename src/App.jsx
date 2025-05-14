@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, PlusCircle, Menu, Moon, Sun, MessageSquare, Settings, LogOut, LogIn, Loader, X } from 'lucide-react';
 import './App.css';
-import logo from './assets/logo.svg';
-import aiAvatar from './assets/aiavatar.png';
+import logo from './assets/logo.svg'; // Assuming you have this logo
+import aiAvatar from './assets/aiavatar.png'; // Assuming you have this avatar
 import { useAuth0 } from "@auth0/auth0-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -20,9 +20,9 @@ const LoginButton = () => {
 
 // Logout button component
 const LogoutButton = () => {
-  const { logout } = useAuth0();
+  const { logout } = useAuth0();  
   return (
-    <button className="auth-button" onClick={() => logout({ returnTo: window.location.origin })}>
+    <button className="auth-button" onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
       <LogOut size={14} />
       <span>Logout</span>
     </button>
@@ -49,7 +49,6 @@ function App() {
   const inputRef = useRef(null);
   const sidebarRef = useRef(null);
   
-  // Helper function to create personalized welcome message
   const getWelcomeMessage = () => {
     if (isAuthenticated && user?.name) {
       return `Welcome to Andromeda AI, ${user.name}. This is an advanced AI assistant designed to help with information, tasks, and conversations. Start by asking any question or requesting assistance.`;
@@ -86,17 +85,13 @@ function App() {
     if (inputRef.current) inputRef.current.focus();
   }, [currentConversation]);
   
-  // Create initial conversation when the component mounts or when user authentication changes
   useEffect(() => {
-    // Create a new conversation but without any welcome message
     const newId = `chat-${Date.now()}`;
-    
     const newConv = {
       id: newId,
       title: 'New Chat',
-      messages: [] // Empty messages array - no chat message to start
+      messages: [] 
     };
-    
     setConversations([newConv]);
     setCurrentConversation(newId);
   }, [isAuthenticated, user?.name]);
@@ -116,7 +111,6 @@ function App() {
     }
   }, [input]);
 
-  // Handle clicks outside of sidebar to close it on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target) && 
@@ -134,9 +128,7 @@ function App() {
     return conversation?.messages || [];
   };
 
-  // Generate a title from the user's first message
   const generateChatTitle = (message) => {
-    // Create a title from the first 30 characters of the message
     const rawTitle = message.trim();
     return rawTitle.length > 30 
       ? `${rawTitle.substring(0, 30)}...` 
@@ -145,12 +137,12 @@ function App() {
 
   const createNewConversation = () => {
     const newId = `chat-${Date.now()}`;
-    const welcomeMessage = getWelcomeMessage();
-    
+    // No welcome message here for a truly empty new chat, 
+    // the welcome panel in chat-box will handle initial view
     const newConv = {
       id: newId,
-      title: `New Chat`,
-      messages: [{ type: 'bot', text: welcomeMessage }]
+      title: `New Chat`, 
+      messages: [] 
     };
     setConversations(prev => [...prev, newConv]);
     setCurrentConversation(newId);
@@ -163,16 +155,13 @@ function App() {
 
     const userMessage = { type: 'user', text: input };
     
-    // Check if this is the first user message in the conversation
     const currentConv = conversations.find(conv => conv.id === currentConversation);
-    const isFirstUserMessage = currentConv.messages.filter(msg => msg.type === 'user').length === 0;
+    const isFirstUserMessage = currentConv && currentConv.messages.filter(msg => msg.type === 'user').length === 0;
     
-    // Update conversation with user message
     const updatedConversations = conversations.map(conv => {
       if (conv.id === currentConversation) {
         return {
           ...conv,
-          // If it's the first user message, update the title
           ...(isFirstUserMessage && { title: generateChatTitle(input) }),
           messages: [...conv.messages, userMessage]
         };
@@ -185,9 +174,15 @@ function App() {
     setLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
 
-      // API call
+      // Ensure VITE_API_KEY is being loaded correctly.
+      // In a real app, handle the case where the key might be undefined.
+      if (!import.meta.env.VITE_API_KEY) {
+        console.error("API Key is missing. Please check your .env file and VITE_API_KEY variable.");
+        throw new Error("API Key missing");
+      }
+      
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_API_KEY}`,
         {
@@ -199,11 +194,17 @@ function App() {
         }
       );
 
+      if (!response.ok) {
+        // Handle HTTP errors (e.g., 400, 401, 500)
+        const errorData = await response.json().catch(() => ({})); // Try to parse error, default to empty if not JSON
+        console.error('API Error Response:', errorData);
+        throw new Error(`API request failed with status ${response.status}: ${errorData.error?.message || response.statusText}`);
+      }
+
       const data = await response.json();
       const botText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
         "I couldn't process that request. Could you try rephrasing?";
 
-      // Update with bot response
       setConversations(prevConvs => prevConvs.map(conv => {
         if (conv.id === currentConversation) {
           return {
@@ -222,7 +223,7 @@ function App() {
             ...conv,
             messages: [...conv.messages, {
               type: 'bot',
-              text: "Sorry, I encountered an error. Please check your connection and try again."
+              text: `Sorry, I encountered an error: ${error.message}. Please check your connection or API key and try again.`
             }]
           };
         }
@@ -254,15 +255,14 @@ function App() {
     setConversations(remaining);
     if (id === currentConversation) {
       if (remaining.length > 0) setCurrentConversation(remaining[0].id);
-      else createNewConversation();
+      else createNewConversation(); // Create a new one if all are deleted
     }
   };
 
-  // Default avatar for non-authenticated users
   const defaultUserAvatar = 'https://t3.ftcdn.net/jpg/08/05/28/22/360_F_805282248_LHUxw7t2pnQ7x8lFEsS2IZgK8IGFXePS.jpg';
   
   const getUserAvatar = () => {
-    return user?.picture || defaultUserAvatar;
+    return isAuthenticated && user?.picture ? user.picture : defaultUserAvatar;
   };
 
   const currentYear = new Date().getFullYear();
@@ -277,7 +277,6 @@ function App() {
         {sidebarOpen && isMobile ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Overlay for mobile when sidebar is open */}
       {isMobile && sidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
       )}
@@ -347,12 +346,16 @@ function App() {
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
             <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
           </button>
+          
+          <footer className="app-footer sidebar-app-footer">
+            <p>&copy; {currentYear} Andromeda by Aashutosh. All rights reserved.</p>
+          </footer>
         </div>
       </div>
 
       <div className="main-content">
         <div className="chat-header">
-          <div className="chat-title">
+          <div className="chat-title-main"> {/* Renamed for clarity from chat-title */}
             <MessageSquare size={18} />
             <span>{conversations.find(c => c.id === currentConversation)?.title || 'Andromeda AI'}</span>
           </div>
@@ -364,12 +367,12 @@ function App() {
               className="profile-pic"
             />
             {userMenuOpen && (
-              <div className="dropdown-overlay" onClick={() => setUserMenuOpen(false)}>
-                <ul className="dropdown-menu">
+              <div className="dropdown-overlay" onClick={() => setUserMenuOpen(false)}> {/* Click outside to close dropdown */}
+                <ul className="dropdown-menu" onClick={(e) => e.stopPropagation()}> {/* Prevent closing when clicking inside menu */}
                   {isAuthenticated ? (
-                    <li><LogoutButton /></li>
+                    <li>{user.name}</li>
                   ) : (
-                    <li><LoginButton /></li>
+                    <li>Not Logged In</li>
                   )}
                 </ul>
               </div>
@@ -379,12 +382,12 @@ function App() {
 
         <div className="chat-window">
           <div className="chat-box">
-            {getCurrentMessages().length === 0 ? (
+            {getCurrentMessages().length === 0 && !loading ? (
               <div className="welcome-panel">
                 <div className="welcome-content">
                   <h2>{isAuthenticated && user?.name ? `Welcome, ${user.name}!` : 'Welcome to Andromeda AI'}</h2>
                   <div className="info-section">
-                    <p>Andromeda AI is an advanced artificial intelligence assistant designed to help with information, tasks, and conversations developed by <a href="https://aashutoshkhatiwada.com.np">Aashutosh Khatiwada</a>.</p>
+                    <p>Andromeda AI is an advanced artificial intelligence assistant designed to help with information, tasks, and conversations developed by <a href="https://aashutoshkhatiwada.com.np" target="_blank" rel="noopener noreferrer">Aashutosh Khatiwada</a>.</p>
                   </div>
                   <button
                     onClick={() => inputRef.current?.focus()}
@@ -436,21 +439,18 @@ function App() {
               onKeyDown={handleKeyPress}
               placeholder="Type your message here..."
               rows={1}
+              disabled={loading}
             />
             <button 
               className="send-btn" 
               onClick={handleSend} 
-              disabled={loading}
+              disabled={loading || !input.trim()}
               aria-label="Send message"
             >
               {loading ? <Loader size={16} className="spinner" /> : <Send size={16} />}
             </button>
           </div>
         </div>
-        
-        <footer className="app-footer">
-          <p>&copy; {currentYear} Andromeda by Aashutosh. All rights reserved.</p>
-        </footer>
       </div>
     </div>
   );

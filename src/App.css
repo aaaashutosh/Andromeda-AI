@@ -1141,6 +1141,31 @@ a {
   opacity: 0.9;
   transform: translateY(-2px);
 }
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* This will provide space above your moved footer */
+}
+
+/* Optional: New styles for the footer now that it's in the sidebar */
+.sidebar-app-footer {
+  margin-top: 8px; /* Add some extra space if the gap isn't enough */
+  padding: 8px 0;  /* Adjust padding as needed */
+  text-align: center; /* Or left, depending on preference */
+}
+
+.sidebar-app-footer p {
+  font-size: 12px; /* Smaller font size for the sidebar */
+  color: #6b7280; /* Adjust color as needed */
+  line-height: 1.4;
+}
+
+.app-container.dark .sidebar-app-footer p {
+  color: #9ca3af; /* Dark mode color */
+}
+
 
 /* Mobile-specific styles */
 @media (max-width: 768px) {
